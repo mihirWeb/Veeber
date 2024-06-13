@@ -1,0 +1,15 @@
+{
+  "name": "youtube-pro",
+  "version": "1.0.0",
+  "description": "A backend project on Youtube + Social media",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "JavaScript",
+    "Backend"
+  ],
+  "author": "Mihir Pratap Singh",
+  "license": "ISC"
+}
