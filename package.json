@@ -11,5 +11,8 @@
     "Backend"
   ],
   "author": "Mihir Pratap Singh",
-  "license": "ISC"
+  "license": "ISC",
+  "devDependencies": {
+    "nodemon": "^3.1.3"
+  }
 }
