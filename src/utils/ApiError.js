@@ -7,7 +7,7 @@ class ApiError extends Error{
         statusCode,
         message= "Something went wrong", // if no error is passed to constructor then this message will run
         errors= [],
-        statck= ""
+        stack= ""
     ){
         super(message) // super means jo overwright krna hi karna h
         this.statusCode = statusCode
@@ -17,8 +17,8 @@ class ApiError extends Error{
         this.success = false
 
         // ye ser ke uper se gaya
-        if(statck){
-            this.stack = statck;    
+        if(stack){
+            this.stack = stack;    
         } else{
             Error.captureStackTrace(this, this.constructor);
         }
