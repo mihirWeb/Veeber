@@ -20,11 +20,11 @@ connectDB()
         console.log(`MongoDB connected! App listening on: ${process.env.PORT}`);
     });
 
-    app.on(error, () => {
-        console.log("Err: ", error);
-    })
+    // app.on(error, () => {
+    //     console.log("Err: ", error);
+    // })
 })
-.catch(err, () => {
+.catch((err) => {
     console.error("MongoDB connection failed!! ", err);
 })
 

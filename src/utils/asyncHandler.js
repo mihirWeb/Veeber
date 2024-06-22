@@ -17,7 +17,8 @@ const asyncHandler = (requestHandler) => async (req, res, next) => {
 
 // SECOND approach
 /*
-const asyncHandler = (requestHandler) => { (req, res, next) => {
+const asyncHandler = (requestHandler) => { 
+    return (req, res, next) => {
     Promise
     .resolve(requestHandler(req, res, next)) // if request is seccuessful
     .catch((err) => next(err)) // if request fails   
