@@ -56,7 +56,7 @@ userSchema.pre("save", async function (next) { //this pre is a middleware which 
                                                // the action is "save" that means we want to perform an function before saving userSchema there are more fields like it e.g. pre, post etc
     if(!this.isModified("password")) return next(); // only run when the password is modified
 
-    this.password = bcrypt.hash(this.password, 10);
+    this.password = await bcrypt.hash(this.password, 10);
     next()
 })
 
