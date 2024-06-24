@@ -159,7 +159,7 @@ const loginUser = asyncHandler( async (req, res) => {
 
   return res
   .status(200)
-  .cookie("accessToken", accessToken, options)
+  .cookie("accessToken", accessToken, options) // we can use .cookie here bcz we have set a middleware in the app.js file i.e. app.use(cookieParser())
   .cookie("refreshToken", refreshToken, options)
   .json(
     new ApiResponse(
@@ -173,8 +173,40 @@ const loginUser = asyncHandler( async (req, res) => {
 
 })
 
+const logOutUser = asyncHandler(async (req, res) => {
+  // now we have access to req.user bcz of auth middleware
+
+  await User.findByIdAndUpdate(  // takes 2 args 1st is id and then what to update
+    req.user._id,
+    {
+      $set: { // all the fields you want to set put inside it
+        refreshToken: undefined
+      }
+    },
+    {
+      new: true // this will give us the updated values in response(res)
+    }
+  )
+
+  const options = {
+    httpOnly: true,
+    secure: true
+  }
+
+  // now we will remove the cookies
+  return res
+  .status(200)
+  .clearCookie("accessToken", options)
+  .clearCookie("refreshToken", options)
+  .json(new ApiResponse(200, {}, "User logged out"))
+
+})
+
 export { 
-  registerUser, }
+  registerUser,
+  loginUser,
+  logOutUser
+}
 
 
 // If we have to do it in one file:-
