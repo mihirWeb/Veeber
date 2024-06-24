@@ -1,10 +1,30 @@
 // controllers generally handles the http request send by users and after that they send response like 200 i.e. OK etc
 
 import { asyncHandler } from "../utils/asyncHandler.js";
-import ApiError from "../utils/ApiError.js"
+import { ApiError } from "../utils/ApiError.js"
 import { User } from "../models/user.model.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js"
 import { ApiResponse } from "../utils/ApiResponse.js";
+
+
+
+const generateRefreshAndAccessToken = async (userId) => {
+  try {
+    const user = await User.findById(userId);
+    const accessToken = user.generateAccessToken();
+    const refreshToken = user.generateRefreshToken();
+
+    user.refreshToken = refreshToken;
+    await user.save({validateBeforeSave: false})
+
+    return {accessToken, refreshToken}
+
+  } catch (error) {
+    throw new ApiError(505, "Something went wrong while generating refresh and access token")
+  }
+}
+
+
 
 const registerUser = asyncHandler( async (req, res) => {
     
@@ -17,7 +37,7 @@ const registerUser = asyncHandler( async (req, res) => {
     // STEP 1: get user details from frontend
 
     const {fullName, email, userName, password} = req.body; // req.body handles incoming data from forms and JSON but for URL we have to do something else
-    console.log("Email: ", email);
+    // console.log("Email: ", email);
 
     // STEP 2: validation - not empty
 
@@ -37,7 +57,7 @@ const registerUser = asyncHandler( async (req, res) => {
 
     // STEP 3: check if user already exists: username, email
 
-    const existedUser = User.findOne({ // .findOne returns whatever field it finds first out of the given no. of fields
+    const existedUser = await User.findOne({ // .findOne returns whatever field it finds first out of the given no. of fields
       $or: [{userName}, {email}]
     })
 
@@ -49,7 +69,13 @@ const registerUser = asyncHandler( async (req, res) => {
     // STEP 4: check for images, check for avatar
 
     const avatarLocalPath = req.files?.avatar[0]?.path;
-    const coverImageLocalPath = req.files?.coverImageLocalPath[0]?.path;
+
+    //  const coverImageLocalPath = req.files?.coverImageLocalPath[0]?.path;
+    let coverImageLocalPath;
+    if (req.files && Array.isArray(req.files.coverImage) && req.files.coverImage.length > 0) {
+        coverImageLocalPath = req.files.coverImage[0].path
+    }
+
     console.log(avatarLocalPath);
     console.log(coverImageLocalPath);
 
@@ -79,7 +105,7 @@ const registerUser = asyncHandler( async (req, res) => {
 
     // STEP 7 & 8: remove password and refresh token field from response + check if user is created in db
 
-    const createdUser = User.findById(user._id).select(
+    const createdUser = await User.findById(user._id).select(
       "-password -refreshToken" // means we dont want these field by default every field is selected
     )
 
@@ -97,7 +123,58 @@ const registerUser = asyncHandler( async (req, res) => {
 
 } )
 
-export {registerUser}
+const loginUser = asyncHandler( async (req, res) => {
+  // Steps involved while logging in the user
+
+  // STEP 1: take data/credentials from user
+  const {email, fullName, userName} = req.body;
+
+  // STEP 2: check atleast email or username must be send by user
+  if(!(userName || email)){
+    throw new ApiError(400, "UserName or email is required")
+  }
+
+  // STEP 3: check username/email should exists in db
+  const user = await User.findOne({
+    $or: [{userName}, {email}]
+  })
+
+  // STEP 4: check password
+  const isPasswordValid = await user.isPasswordCorrect(password)
+
+  if(!isPasswordValid){
+    throw new ApiError(401, "Invalid user credentials")
+  }
+
+  // STEP 5: generate refresh and access tokens
+  // we created a method for this step for our convinience
+  const {accessToken, refreshToken} = await generateRefreshAndAccessToken(user._id);
+  const loggedInUser = await User.findById(user._id).select("-password -refreshToken"); // to get the updated user with refresh token but remember it may increase the cost
+
+  // STEP 6: send cookies
+  const options = {
+    httpOnly: true, // with this the cookies will be read only and can only be changed in backend
+    secure: true
+  }
+
+  return res
+  .status(200)
+  .cookie("accessToken", accessToken, options)
+  .cookie("refreshToken", refreshToken, options)
+  .json(
+    new ApiResponse(
+      200,
+      {
+        user: loggedInUser, refreshToken, accessToken
+      },
+      "User successfully logged in"
+    )
+  )
+
+})
+
+export { 
+  registerUser, }
 
 
 // If we have to do it in one file:-

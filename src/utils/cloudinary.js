@@ -9,7 +9,7 @@ import fs from 'fs'; // fs is an inbuilt nodejs package that is used to read, wr
 cloudinary.config({ 
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME, 
     api_key: process.env.CLOUDINARY_API_KEY, 
-    api_secret: CLOUDINARY_API_SECRET
+    api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
 const uploadOnCloudinary = async (localFilePath) => {
@@ -20,7 +20,8 @@ const uploadOnCloudinary = async (localFilePath) => {
             resource_type: "auto"
         })
 
-        console.log("File has been uploaded successfully: ", response.url);
+        // console.log("File has been uploaded successfully: ", response.url);
+        fs.unlinkSync(localFilePath); // only add this when your code runs successfully first add files without this dlt bcz it helps in debugging
         return response;
     } catch (error) {
         fs.unlinkSync(localFilePath) // removing the locally saved file path as the uploadation failed
