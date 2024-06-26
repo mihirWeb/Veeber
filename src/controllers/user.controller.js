@@ -36,13 +36,13 @@ const registerUser = asyncHandler( async (req, res) => {
     // **Logic and 9 steps involved while registering a user in database:-
     // STEP 1: get user details from frontend
 
-    const {fullName, email, userName, password} = req.body; // req.body handles incoming data from forms and JSON but for URL we have to do something else
-    // console.log("Email: ", email);
+    const {fullName, email, username, password} = req.body; // req.body handles incoming data from forms and JSON but for URL we have to do something else
+    console.log("username: ", username);
 
     // STEP 2: validation - not empty
 
     if(
-      [fullName, email, userName, password].some((field) => {
+      [fullName, email, username, password].some((field) => {
         field?.trim() ===""
       })
     ){
@@ -58,11 +58,11 @@ const registerUser = asyncHandler( async (req, res) => {
     // STEP 3: check if user already exists: username, email
 
     const existedUser = await User.findOne({ // .findOne returns whatever field it finds first out of the given no. of fields
-      $or: [{userName}, {email}]
+      $or: [{username}, {email}]
     })
 
     if(existedUser){
-      throw new ApiError(409, "User with email or userName already exists");
+      throw new ApiError(409, "User with email or username already exists");
     }
 
 
@@ -92,22 +92,29 @@ const registerUser = asyncHandler( async (req, res) => {
       throw new ApiError(400, "Avatar image is required");
     }
 
+    console.log(avatar);
+    console.log(coverImage);
+
     // STEP 6: create user object - create entry in db
 
     const user = await User.create({
+      username,
       fullName,
       avatar: avatar.url,
       coverImage: coverImage?.url || "",
       email,
-      password,
-      userName: userName.toLowerCase()
+      password
     })
+
+    console.log("The user is: ", user)
 
     // STEP 7 & 8: remove password and refresh token field from response + check if user is created in db
 
     const createdUser = await User.findById(user._id).select(
       "-password -refreshToken" // means we dont want these field by default every field is selected
     )
+
+    console.log(createdUser);
 
     if(!createdUser){
       throw new ApiError(500, "Something went wrong while registering the user");
@@ -118,7 +125,7 @@ const registerUser = asyncHandler( async (req, res) => {
     // STEP 9:  return res
 
     return res.status(201).json(
-      new ApiResponse(201, createdUser, "User registered successfully")
+      new ApiResponse(200, createdUser, "User registered successfully")
     )
 
 } )
@@ -127,16 +134,16 @@ const loginUser = asyncHandler( async (req, res) => {
   // Steps involved while logging in the user
 
   // STEP 1: take data/credentials from user
-  const {email, fullName, userName} = req.body;
+  const {email, fullName, username} = req.body;
 
   // STEP 2: check atleast email or username must be send by user
-  if(!(userName || email)){
-    throw new ApiError(400, "UserName or email is required")
+  if(!(username || email)){
+    throw new ApiError(400, "username or email is required")
   }
 
   // STEP 3: check username/email should exists in db
   const user = await User.findOne({
-    $or: [{userName}, {email}]
+    $or: [{username}, {email}]
   })
 
   // STEP 4: check password
