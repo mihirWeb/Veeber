@@ -13,6 +13,7 @@ const generateRefreshAndAccessToken = async (userId) => {
     const user = await User.findById(userId);
     const accessToken = user.generateAccessToken();
     const refreshToken = user.generateRefreshToken();
+    // console.log("user Id is: ", userId)
 
     user.refreshToken = refreshToken;
     await user.save({validateBeforeSave: false})
@@ -134,7 +135,7 @@ const loginUser = asyncHandler( async (req, res) => {
   // Steps involved while logging in the user
 
   // STEP 1: take data/credentials from user
-  const {email, fullName, username} = req.body;
+  const {email, username, password} = req.body;
 
   // STEP 2: check atleast email or username must be send by user
   if(!(username || email)){
@@ -155,6 +156,7 @@ const loginUser = asyncHandler( async (req, res) => {
 
   // STEP 5: generate refresh and access tokens
   // we created a method for this step for our convinience
+  // console.log("user is: ", user);
   const {accessToken, refreshToken} = await generateRefreshAndAccessToken(user._id);
   const loggedInUser = await User.findById(user._id).select("-password -refreshToken"); // to get the updated user with refresh token but remember it may increase the cost
 
