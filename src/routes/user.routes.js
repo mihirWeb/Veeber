@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { logOutUser, loginUser, refreshAccessToken, registerUser } from "../controllers/user.controller.js";
+import { changeCurrentPassword, getCurrentUser, logOutUser, loginUser, refreshAccessToken, registerUser, updateAccountDetail, updateCoverImage } from "../controllers/user.controller.js";
 import { upload } from "../middlewares/multer.middleware.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 
@@ -24,5 +24,11 @@ router.route("/login").post(loginUser);
 // Secure routes i.e. that requires authentication
 router.route("/logout").post(verifyJWT, logOutUser); // auth middleware added
 router.route("/refresh-token").post(refreshAccessToken);
+router.route("/change-password").post(verifyJWT, changeCurrentPassword);
+router.route("/current-user").post(verifyJWT, getCurrentUser);
+router.route("/update-account-detail").post(verifyJWT, updateAccountDetail);
+router.route("/update-avatar").post(verifyJWT, upload.single("avatar"), updateAccountDetail);
+router.route("/update-cover-image").post(verifyJWT, upload.single("coverImage") , updateCoverImage);
+
 
 export default router;
