@@ -5,6 +5,7 @@ import { ApiError } from "../utils/ApiError.js"
 import { User } from "../models/user.model.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js"
 import { ApiResponse } from "../utils/ApiResponse.js";
+import jwt from "jsonwebtoken";
 
 
 
@@ -24,8 +25,6 @@ const generateRefreshAndAccessToken = async (userId) => {
     throw new ApiError(505, "Something went wrong while generating refresh and access token")
   }
 }
-
-
 
 const registerUser = asyncHandler( async (req, res) => {
     
@@ -51,9 +50,10 @@ const registerUser = asyncHandler( async (req, res) => {
     }
 
     // Alternative validation:-
-    // if (fullName.trim === "") {
-    //   throw new ApiError(400, "FullName is required")
-    // } and so on for each field
+    // if (username.trim === "") {
+    //   throw new ApiError(400, "username is required");
+    //   console.log("username: ", username);
+    // } // and so on for each field
 
 
     // STEP 3: check if user already exists: username, email
@@ -77,8 +77,8 @@ const registerUser = asyncHandler( async (req, res) => {
         coverImageLocalPath = req.files.coverImage[0].path
     }
 
-    console.log(avatarLocalPath);
-    console.log(coverImageLocalPath);
+    // console.log(avatarLocalPath);
+    // console.log(coverImageLocalPath);
 
     if(!avatarLocalPath){
       throw new ApiError(400, "Avatar image is required");
@@ -107,7 +107,26 @@ const registerUser = asyncHandler( async (req, res) => {
       password
     })
 
-    console.log("The user is: ", user)
+    // alternate method
+
+    // const user = new User({
+    //   username,
+    //   fullName,
+    //   avatar: avatar.url,
+    //   coverImage: coverImage?.url || "",
+    //   email,
+    //   password
+    // });
+    
+    // try {
+    //   await user.save();
+    //   // Handle successful user creation (e.g., send a response)
+    // } catch (error) {
+    //   console.log("ERR: ", error);
+    // }
+    
+
+    // console.log("The user is: ", user)
 
     // STEP 7 & 8: remove password and refresh token field from response + check if user is created in db
 
@@ -211,10 +230,59 @@ const logOutUser = asyncHandler(async (req, res) => {
 
 })
 
+const refreshAccessToken = asyncHandler(async (req, res) => { // route used when we have refresh token but access token is expired
+
+  const incomingRefreshToken = req.cookie.refreshToken || req.body.refreshToken; // if coming from mobile
+  if(!incomingRefreshToken){
+    throw new ApiError(401, "Unauthorized request");
+  }
+
+  try {
+    const decodedToken = jwt.verify(
+      incomingRefreshToken,
+      process.env.REFRESH_TOKEN_SECRET
+    )
+  
+    const user = await User.findById(decodedToken?._id);
+    if(!user){
+      throw new ApiError(401, "Invalid Refresh Token");
+    }
+  
+    if(decodedToken !== user.refreshToken){
+      throw new ApiError(401, "Refresh Token is expired");
+    }
+  
+    const {accessToken, refreshToken} = await generateRefreshAndAccessToken(user._id);
+  
+    const options = {
+      httpOnly: true,
+      secure: true
+    }
+  
+    return res
+    .status(200)
+    .cookie("accessToken", accessToken, options)
+    .cookie("refreshToken", refreshToken, options)
+    .json(
+      new ApiResponse(
+        201,
+        {
+          accessToken, refreshToken
+        },
+        "Access Token generated successfully"
+      )
+    )
+  } catch (error) {
+    throw new ApiError(401, error?.message || "Invalid Refresh Token");
+  }
+
+})
+
 export { 
   registerUser,
   loginUser,
-  logOutUser
+  logOutUser,
+  refreshAccessToken
 }
 
 
