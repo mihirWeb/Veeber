@@ -1,5 +1,9 @@
 import mongoose from "mongoose";
 
+// Logic - This schema creating will create a seperate document for each and every user which contain a "subscriber" and "channel" 
+// now if we have to find the total subscribers of a channel then we have to raise a query in subscriberSchema model to search those
+// documents whose channel value == "jis channel ke subscriber chahiye", for more info "subscriber schema video of chai and code" 
+
 const subscriberSchema = new mongoose.Schema(
     {
         subscriber: {
@@ -19,4 +23,4 @@ const subscriberSchema = new mongoose.Schema(
     }
 )
 
-export const Subscription = mongoose.model("subscription", subscriberSchema);
+export const Subscription = mongoose.model("Subscription", subscriberSchema);
