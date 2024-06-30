@@ -6,6 +6,7 @@ import { User } from "../models/user.model.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import jwt from "jsonwebtoken";
+import mongoose from "mongoose";
 
 const generateRefreshAndAccessToken = async (userId) => {
   try {
@@ -476,7 +477,12 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
 });
 
 const getUserWatchHistory = asyncHandler(async (req, res) => {
-  const user = User.aggregate([
+  const user = await User.aggregate([
+    {
+      $match: {
+        _id: new mongoose.Types.ObjectId(req.user?._id)
+      }
+    },
     {
       $lookup: {
         from: "videos",
@@ -513,12 +519,16 @@ const getUserWatchHistory = asyncHandler(async (req, res) => {
     },
   ]);
 
+  if(!user){
+    throw new ApiError(401, "Invalid user to search for watch history");
+  }
+
   return res
   .status(200)
   .json(
     new ApiResponse(
       201,
-      user?.watchHistory,
+      user[0]?.watchHistory,
       "Watch history fetched successfully"
     )
   )
@@ -535,7 +545,7 @@ export {
   updateAvatar,
   updateCoverImage,
   getUserChannelProfile,
-  getUserWatchHistory,
+  getUserWatchHistory
 };
 
 // If we have to do it in one file:-
