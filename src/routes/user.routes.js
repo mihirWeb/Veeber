@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { changeCurrentPassword, getCurrentUser, getUserChannelProfile, logOutUser, loginUser, refreshAccessToken, registerUser, updateAccountDetail, updateCoverImage } from "../controllers/user.controller.js";
+import { changeCurrentPassword, getCurrentUser, getUserChannelProfile, getUserWatchHistory, logOutUser, loginUser, refreshAccessToken, registerUser, updateAccountDetail, updateCoverImage } from "../controllers/user.controller.js";
 import { upload } from "../middlewares/multer.middleware.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 
@@ -30,8 +30,8 @@ router.route("/update-account-detail").patch(verifyJWT, updateAccountDetail);
 router.route("/update-avatar").patch(verifyJWT, upload.single("avatar"), updateAccountDetail);
 router.route("/update-cover-image").patch(verifyJWT, upload.single("coverImage") , updateCoverImage);
 
-router.route("/c/:username").get(verifyJWT, getUserChannelProfile) // we used : here bcz in our controller we fetched username from params and value after ":" is fetched in params
-router.route("/history").get(verifyJWT, getUserChannelProfile)
+router.route("/c/:username").get(verifyJWT, getUserChannelProfile) // we used : here bcz in our controller we fetched username from params and value after ":" is fetched in params but no need to write : in url
+router.route("/history").get(verifyJWT, getUserWatchHistory)
 
 
 export default router;

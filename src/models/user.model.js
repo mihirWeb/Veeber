@@ -60,8 +60,8 @@ userSchema.pre("save", async function (next) { //this pre is a middleware which 
     next()
 })
 
-userSchema.methods.isPasswordCorrect = async function(password){ // this is a way of creating our own custom method like pre however pre is inbuilt method
-    return await bcrypt.compare(password, this.password); // compares the password user entered with the encrypted password
+userSchema.methods.isPasswordCorrect = function(password){ // this is a way of creating our own custom method like pre however pre is inbuilt method
+    return bcrypt.compare(password, this.password); // compares the password user entered with the encrypted password
 }
 
 userSchema.methods.generateAccessToken = function() {

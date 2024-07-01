@@ -214,9 +214,9 @@ const logOutUser = asyncHandler(async (req, res) => {
     // takes 2 args 1st is id and then what to update
     req.user._id,
     {
-      $set: {
+      $unset: { // set the value field to null
         // all the fields you want to set put inside it
-        refreshToken: undefined,
+        refreshToken: 1,
       },
     },
     {
@@ -293,8 +293,7 @@ const changeCurrentPassword = asyncHandler(async (req, res) => {
   if (newPassword !== confirmPassword) {
     throw new ApiError(401, "New password and confirm password should be same");
   }
-
-  const user = await User.findById(req.user?._id);
+  const user = await User.findById(req.user?._id).select("+password");
   if (!user) {
     throw new ApiError(401, "Invalid credentials");
   }
